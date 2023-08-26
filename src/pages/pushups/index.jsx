@@ -1,21 +1,46 @@
 /* eslint-disable sort-keys */
-import { useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import anime from 'animejs'
+import { format } from 'date-fns'
+import { debounce } from 'lodash'
 
 import classes from '@/styles/pushups.module.scss'
 
+import clientPromise from '@/lib/mongoConnect'
+
 const COLORS = [ 'red', 'coral', 'orange', 'blue' ]
 
-export default function Pushups() {
+export default function Pushups( { data } ) {
   const [ circlePos, setCirclePos ] = useState( {
     x: 0,
     y: 0,
   } )
-  const [ count, setCount ] = useState( 0 )
+
+  const [ count, setCount ] = useState( data.count )
 
   const containerEl = useRef( null )
   const circleEl = useRef( null )
   const i = useRef( -1 )
+
+  const updateCount = useCallback( async ( count ) => {
+    try {
+      await fetch( '/api/add-pushup', {
+        method: 'POST',
+        body: JSON.stringify( { count } ),
+      } )
+
+    } catch ( error ) {
+      console.log( error ) // eslint-disable-line
+    }
+  }, [] )
+
+  const debouncedUpdateCount = useCallback( debounce( updateCount, 3000 ), [] )
+
+  useEffect( () => {
+    if ( count !== data.count ) {
+      debouncedUpdateCount( count )
+    }
+  }, [ count ] )
 
   const handleClick = ( e ) => {
     setCirclePos( {
@@ -54,4 +79,19 @@ export default function Pushups() {
       </h4>
     </main>
   )
+}
+
+export const getServerSideProps = async () => {
+  const client = await clientPromise
+  const db = client.db( 'exercise' )
+
+  const exerciseColl = db.collection( 'pushups' )
+
+  const today = format( new Date(), 'dd/MM/yyyy' )
+
+  const result = await exerciseColl
+    .findOne( { date: today } )
+  // .sort( { metacritic: -1 } )
+
+  return { props: { data: JSON.parse( JSON.stringify( result ) ) } }
 }
