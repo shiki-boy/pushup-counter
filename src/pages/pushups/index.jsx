@@ -16,7 +16,7 @@ export default function Pushups( { data } ) {
     y: 0,
   } )
 
-  const [ count, setCount ] = useState( data.count )
+  const [ count, setCount ] = useState( data?.count ?? 0 )
 
   const containerEl = useRef( null )
   const circleEl = useRef( null )
@@ -37,7 +37,7 @@ export default function Pushups( { data } ) {
   const debouncedUpdateCount = useCallback( debounce( updateCount, 3000 ), [] )
 
   useEffect( () => {
-    if ( count !== data.count ) {
+    if ( count !== data?.count ) {
       debouncedUpdateCount( count )
     }
   }, [ count ] )
