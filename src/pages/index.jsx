@@ -28,7 +28,7 @@ export default function Home() {
         <Flex gap='3'>
           <Box>
             <Button variant='classic' color='orange' onClick={ handlePushups }>
-              Pushups
+              PUSHUPS
             </Button>
           </Box>
 
